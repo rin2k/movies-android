@@ -1,4 +1,4 @@
-package com.example.RealFilm.Fragment;
+package com.example.RealFilm.fragment;
 
 import android.os.Bundle;
 

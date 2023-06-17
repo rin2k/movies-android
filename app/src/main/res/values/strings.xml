@@ -3,6 +3,28 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment 1</string>
 
+    <!-- common -->
+    <string name="ok">OK</string>
+    <string name="add">Thêm</string>
+    <string name="required_fields_error">Các trường là bắt buộc</string>
+
+    <!-- common movie -->
+    <string name="genre">Thể loại</string>
+    <string name="actors">Diễn viên</string>
+    <string name="director">Đạo diễn</string>
+    <string name="duration">Thời lượng</string>
+    <string name="minutes">Phút</string>
+    <string name="release_year">Năm phát hành</string>
+    <string name="country">Quốc gia</string>
+    <string name="movie_description">Nội dung phim</string>
+    <string name="trailer_link">Xem trước</string>
+    <string name="link_movie">Link phim</string>
+
+
+
+
+
+
     <string name="textview_new_movie"><u>Phim mới</u></string>
     <string name="textview_category"><u>Thể loại</u></string>
     <string name="textview_nation"><u>Quốc gia</u></string>

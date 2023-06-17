@@ -1,4 +1,4 @@
-package com.example.RealFilm;
+package com.example.RealFilm.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.example.RealFilm.R;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackParameters;
@@ -182,19 +183,19 @@ public class WatchMoviesActivity extends AppCompatActivity {
 
     private void getData(String str){
 
-        mDatabase.child(str).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-                        DataSnapshot dataSnapshot = task.getResult();
-                        int viewcount = Integer.parseInt(dataSnapshot.child("viewcount").getValue().toString());
-                        mDatabase.child(str).child("viewcount").setValue(viewcount + 1);
-                    }
-                }
-
-            }
-        });
+//        mDatabase.child(str).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DataSnapshot> task) {
+//                if (task.isSuccessful()){
+//                    if (task.getResult().exists()){
+//                        DataSnapshot dataSnapshot = task.getResult();
+//                        int viewcount = Integer.parseInt(dataSnapshot.child("viewcount").getValue().toString());
+//                        mDatabase.child(str).child("viewcount").setValue(viewcount + 1);
+//                    }
+//                }
+//
+//            }
+//        });
 
     }
 

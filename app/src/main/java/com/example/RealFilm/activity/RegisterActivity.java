@@ -1,6 +1,5 @@
-package com.example.RealFilm;
+package com.example.RealFilm.activity;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
@@ -16,19 +15,24 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.example.RealFilm.R;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.Status;
+import com.example.RealFilm.model.User;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.UserService;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -169,45 +173,57 @@ public class RegisterActivity extends AppCompatActivity {
 
         progressDialog.setMessage(getString(R.string.progressDialog_register_loading));
         progressDialog.show();
-        mAuth.createUserWithEmailAndPassword(strEmail, strPass)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            userId = mAuth.getCurrentUser().getUid();
-                            writeNewUser(strName, strEmail, strBirthday);
 
-                        } else {
-                            progressDialog.dismiss();
-                            Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-    }
+        UserService userService = ApiService.createService(UserService.class);
+        Call<ApiResponse> call = userService.signup(strEmail, strPass, strEmail, strBirthday);
 
-    public void writeNewUser(String name, String email , String birthday) {
 
-        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        Date date = new Date();
-        String joindate = dateFormat.format(date);
-        int admin = 0;
-
-        String avatar = "https://firebasestorage.googleapis.com/v0/b/realphim-9e426.appspot.com/o/UsersAvatar%2FDefaulstAvatar%2Fpngtree.jpg?alt=media&token=bda859a2-a185-4e5e-b9cb-cd7a7c2589f3";
-        User user = new User(name, email, birthday, joindate, admin, avatar);
-
-        mDatabase.child("Users").child(userId).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
+        call.enqueue(new Callback<ApiResponse>() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    progressDialog.dismiss();
-                    Toast.makeText(RegisterActivity.this, R.string.toast_register_succes, Toast.LENGTH_LONG).show();
-                    Intent i1 = new Intent(RegisterActivity.this,LoginActivity.class);
-                    startActivity(i1);
-                    finishAffinity();
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                progressDialog.dismiss();
+                if(response.isSuccessful()){
+                    ApiResponse<User> res = response.body();
+                    if(res.getStatus() == Status.SUCCESS){
+                        Toast.makeText(getApplication(), res.getMessage(), Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(RegisterActivity.this,LoginActivity.class);
+                        startActivity(intent);
+                        finishAffinity();
+                    }
+                    else{
+                        Toast.makeText(getApplication(), res.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                else  {
+                    Toast.makeText(getApplication(), "Đã xảy ra lỗi", Toast.LENGTH_SHORT).show();
                 }
             }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+
+            }
         });
+
+
+
+//        mAuth.createUserWithEmailAndPassword(strEmail, strPass)
+//                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<AuthResult> task) {
+//                        if (task.isSuccessful()) {
+//                            userId = mAuth.getCurrentUser().getUid();
+//                            writeNewUser(strName, strEmail, strBirthday);
+//
+//                        } else {
+//                            progressDialog.dismiss();
+//                            Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
+//                        }
+//                    }
+//                });
     }
+
+
 
     public void pickDate(){
         DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {

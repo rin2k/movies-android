@@ -1,6 +1,5 @@
-package com.example.RealFilm;
+package com.example.RealFilm.activity;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -17,23 +16,24 @@ import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.example.RealFilm.R;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.User;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ChangeInformationActivity extends AppCompatActivity {
 
@@ -132,89 +132,141 @@ public class ChangeInformationActivity extends AppCompatActivity {
         String emailUpdate = Edittext_change_infor_email.getText().toString().trim();
         String nameUpdate = Edittext_change_infor_name.getText().toString().trim();
         String birthdaylUpdate = Edittext_change_infor_birthday.getText().toString().trim();
-        userId = user.getUid();
-        user.updateEmail(emailUpdate)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            mDatabase.child(userId).child("email").setValue(emailUpdate);
-                            mDatabase.child(userId).child("name").setValue(nameUpdate);
-                            mDatabase.child(userId).child("birthday").setValue(birthdaylUpdate);
-                            finish();
-                            Toast.makeText(ChangeInformationActivity.this,"Cập nhật thông tin thành công!",Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(ChangeInformationActivity.this,"Cập nhật thông tin thất bại!",Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        userId = "HVuDpDfG91e8K1ZU7psuyRj3JzY2";
+
+        UserService userService = ApiService.createService(UserService.class);
+        Call<ApiResponse<User>> call = userService.updateUser(nameUpdate, emailUpdate, birthdaylUpdate);
+
+        call.enqueue(new Callback<ApiResponse<User>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                if(response.isSuccessful()){
+                    ApiResponse<User> res = response.body();
+                    Toast.makeText(ChangeInformationActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
+
+                }
+
+
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
+
+            }
+        });
+
+
+//        user.updateEmail(emailUpdate)
+//                .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Void> task) {
+//                        if (task.isSuccessful()) {
+//                            mDatabase.child(userId).child("email").setValue(emailUpdate);
+//                            mDatabase.child(userId).child("name").setValue(nameUpdate);
+//                            mDatabase.child(userId).child("birthday").setValue(birthdaylUpdate);
+//                            finish();
+//                            Toast.makeText(ChangeInformationActivity.this,"Cập nhật thông tin thành công!",Toast.LENGTH_SHORT).show();
+//                        } else {
+//                            Toast.makeText(ChangeInformationActivity.this,"Cập nhật thông tin thất bại!",Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
+//                });
 
         //up ảnh người dùng lên store
-        storageRef = FirebaseStorage.getInstance().getReference().child("UsersAvatar").child(userId);
-        UploadTask uploadTask = storageRef.child("avatar").putFile(ImageUri);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-            }
-        });
+//        storageRef = FirebaseStorage.getInstance().getReference().child("UsersAvatar").child(userId);
+//        UploadTask uploadTask = storageRef.child("avatar").putFile(ImageUri);
+//        uploadTask.addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception exception) {
+//            }
+//        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//            @Override
+//            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//            }
+//        });
 
-        //lấy link ảnh người dùng từ store để thêm vào thông tin người dùng
-        storageRef.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
-            @Override
-            public void onSuccess(ListResult listResult) {
-                for(StorageReference file:listResult.getItems()){
-                    file.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            String avatar_link = uri.toString();
-                            mDatabase.child(userId).child("avatar").setValue(avatar_link);
-                        }
-                    }).addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-
-                        }
-                    });
-                }
-            }
-        });
+//        //lấy link ảnh người dùng từ store để thêm vào thông tin người dùng
+//        storageRef.listAll().addOnSuccessListener(new OnSuccessListener<ListResult>() {
+//            @Override
+//            public void onSuccess(ListResult listResult) {
+//                for(StorageReference file:listResult.getItems()){
+//                    file.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                        @Override
+//                        public void onSuccess(Uri uri) {
+//                            String avatar_link = uri.toString();
+//                            mDatabase.child(userId).child("avatar").setValue(avatar_link);
+//                        }
+//                    }).addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                        @Override
+//                        public void onSuccess(Uri uri) {
+//
+//                        }
+//                    });
+//                }
+//            }
+//        });
     }
 
     private void getUserInfor(){
         progressDialog.setMessage("Đang xử lý...");
         progressDialog.show();
-        userId = user.getUid();
+        userId = "HVuDpDfG91e8K1ZU7psuyRj3JzY2";
 
-        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+        UserService userService = ApiService.createService(UserService.class);
+        Call<ApiResponse<User>> call = userService.getUser();
+
+        call.enqueue(new Callback<ApiResponse<User>>() {
             @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                if(response.isSuccessful()){
+                    ApiResponse<User> res = response.body();
+                    User user = res.getData();
 
-                        DataSnapshot dataSnapshot = task.getResult();
-                        name = String.valueOf(dataSnapshot.child("name").getValue());
-                        email = String.valueOf(dataSnapshot.child("email").getValue());
-                        birthday = String.valueOf(dataSnapshot.child("birthday").getValue());
-                        String avatar = String.valueOf(dataSnapshot.child("avatar").getValue());
+                    name= user.getName();
+                    email = user.getEmail();
+                    birthday = user.getBirthday();
+                    String avatar = user.getPhotoURL();
+                    Glide.with(ChangeInformationActivity.this).load(avatar).into(imageView_avatar);
 
-                        Glide.with(ChangeInformationActivity.this).load(avatar).into(imageView_avatar);
+                    Edittext_change_infor_name.setText(name);
+                    Edittext_change_infor_email.setText(email);
+                    Edittext_change_infor_birthday.setText(birthday);
 
-                        Edittext_change_infor_name.setText(name);
-                        Edittext_change_infor_email.setText(email);
-                        Edittext_change_infor_birthday.setText(birthday);
-
-                    }else {
-                        Toast.makeText(ChangeInformationActivity.this,"Không thể tìm thấy tài khoản của bạn!",Toast.LENGTH_SHORT).show();
-
-                    }
                 }
+                progressDialog.dismiss();
+
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
                 progressDialog.dismiss();
             }
         });
+
+//        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DataSnapshot> task) {
+//                if (task.isSuccessful()){
+//                    if (task.getResult().exists()){
+//
+//                        DataSnapshot dataSnapshot = task.getResult();
+//                        name = String.valueOf(dataSnapshot.child("name").getValue());
+//                        email = String.valueOf(dataSnapshot.child("email").getValue());
+//                        birthday = String.valueOf(dataSnapshot.child("birthday").getValue());
+//                        String avatar = String.valueOf(dataSnapshot.child("avatar").getValue());
+//
+//                        Glide.with(ChangeInformationActivity.this).load(avatar).into(imageView_avatar);
+//
+//                        Edittext_change_infor_name.setText(name);
+//                        Edittext_change_infor_email.setText(email);
+//                        Edittext_change_infor_birthday.setText(birthday);
+//
+//                    }else {
+//                        Toast.makeText(ChangeInformationActivity.this,"Không thể tìm thấy tài khoản của bạn!",Toast.LENGTH_SHORT).show();
+//
+//                    }
+//                }
+//                progressDialog.dismiss();
+//            }
+//        });
     }
 
 //

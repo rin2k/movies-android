@@ -1,10 +1,9 @@
-package com.example.RealFilm.Fragment;
+package com.example.RealFilm.fragment;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
@@ -17,17 +16,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.RealFilm.ChangeInformationActivity;
-import com.example.RealFilm.LoginActivity;
-import com.example.RealFilm.MoviesActivity;
+import com.example.RealFilm.activity.ChangeInformationActivity;
+import com.example.RealFilm.activity.LoginActivity;
+import com.example.RealFilm.activity.MoviesActivity;
 import com.example.RealFilm.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.User;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.UserService;
+import com.example.RealFilm.utils.Constants;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class UserProfileFragment extends Fragment {
@@ -97,7 +102,7 @@ public class UserProfileFragment extends Fragment {
         imageView = view.findViewById(R.id.imageView);
         mDatabase = FirebaseDatabase.getInstance().getReference("Users");
         user = FirebaseAuth.getInstance().getCurrentUser();
-        userId = user.getUid();
+        userId = "HVuDpDfG91e8K1ZU7psuyRj3JzY2";
     }
 
 
@@ -116,8 +121,7 @@ public class UserProfileFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity() , MoviesActivity.class);
-                intent.putExtra("id",  "Danh sách phim yêu thích");
-                intent.putExtra("userID",  userId);
+                intent.putExtra("key", Constants.MOVIE_FAVORITE);
                 startActivity(intent);
             }
         });
@@ -127,8 +131,7 @@ public class UserProfileFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity() , MoviesActivity.class);
-                intent.putExtra("id",  "Danh sách phim đã bình luận");
-                intent.putExtra("userID",  userId);
+                intent.putExtra("key", Constants.MOVIE_COMMENT);
                 startActivity(intent);
             }
         });
@@ -139,8 +142,7 @@ public class UserProfileFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity() , MoviesActivity.class);
-                intent.putExtra("id",  "Danh sách phim đã đánh giá");
-                intent.putExtra("userID",  userId);
+                intent.putExtra("key", Constants.MOVIE_STAR);
                 startActivity(intent);
             }
         });
@@ -150,32 +152,34 @@ public class UserProfileFragment extends Fragment {
         progressDialog.setMessage("Đang xử lý...");
         progressDialog.show();
 
-        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+        UserService userService = ApiService.createService(UserService.class);
+        Call<ApiResponse<User>> call = userService.getUser();
+        call.enqueue(new Callback<ApiResponse<User>>() {
             @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                if(response.isSuccessful()){
+                    ApiResponse<User> res = response.body();
+                    User user = res.getData();
 
-                        DataSnapshot dataSnapshot = task.getResult();
-                        name = String.valueOf(dataSnapshot.child("name").getValue());
-                        email = String.valueOf(dataSnapshot.child("email").getValue());
-                        birthday = String.valueOf(dataSnapshot.child("birthday").getValue());
-                        joindate = String.valueOf(dataSnapshot.child("joindate").getValue());
-                        String avatar = String.valueOf(dataSnapshot.child("avatar").getValue());
+                    name= user.getName();
+                    userId = user.getId() + "";
+                    email = user.getEmail();
+                    birthday = user.getBirthday();
+                    joindate= user.getCreatedAt().toString();
+                    String avatar = user.getPhotoURL();
+                    Glide.with(UserProfileFragment.this).load(avatar).into(imageView);
 
-                        Glide.with(UserProfileFragment.this).load(avatar).into(imageView);
-
-                        Tv_user_name.setText(name);
-                        Tv_user_id.setText(userId);
-                        Tv_user_email.setText(email);
-                        Tv_user_birthday.setText(birthday);
-                        Tv_user_joindate.setText(joindate);
-
-                    }else {
-                        Toast.makeText(getActivity(),"Không thể tìm thấy tài khoản của bạn!",Toast.LENGTH_SHORT).show();
-
-                    }
+                    Tv_user_name.setText(name);
+                    Tv_user_id.setText(userId);
+                    Tv_user_email.setText(email);
+                    Tv_user_birthday.setText(birthday);
+                    Tv_user_joindate.setText(joindate);
                 }
+                progressDialog.dismiss();
+
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
                 progressDialog.dismiss();
             }
         });

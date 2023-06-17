@@ -1,4 +1,4 @@
-package com.example.RealFilm.Fragment;
+package com.example.RealFilm.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,14 +6,21 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import com.example.RealFilm.AddMoviesActivity;
+import com.bumptech.glide.Glide;
+import com.example.RealFilm.activity.AddMoviesActivity;
 import com.example.RealFilm.R;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.Status;
+import com.example.RealFilm.model.User;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.UserService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,6 +28,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SettingFragment extends Fragment {
 
@@ -68,6 +79,8 @@ public class SettingFragment extends Fragment {
         btn_add_movies = view.findViewById(R.id.btn_add_movies);
         linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
 
+
+
         checkAdmin();
         addMoviesOnClick();
         return view;
@@ -85,24 +98,50 @@ public class SettingFragment extends Fragment {
 
 
     private void checkAdmin(){
-
-        String userId = user.getUid();
-        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+        UserService userService = ApiService.createService(UserService.class);
+        Call<ApiResponse<User>> call = userService.getUser();
+        call.enqueue(new Callback<ApiResponse<User>>() {
             @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-                        DataSnapshot dataSnapshot = task.getResult();
-                        int CHECK_ADMIN = dataSnapshot.child("Admin").getValue(Integer.class);
-                        if (CHECK_ADMIN == 1){
-                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
-                        } else {
-                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
-                        }
-                    }
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                if(response.isSuccessful()){
+                    ApiResponse<User> res = response.body();
+                   if(res.getStatus() == Status.SUCCESS){
+                       User user = res.getData();
+                       if(user.getAdmin() == true){
+                           linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
+                       }
+                       else {
+                           linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
+                       }
+                   }
+
                 }
+
+
+            }
+            @Override
+            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
+
             }
         });
+
+//        String userId = "HVuDpDfG91e8K1ZU7psuyRj3JzY2";
+//        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DataSnapshot> task) {
+//                if (task.isSuccessful()){
+//                    if (task.getResult().exists()){
+//                        DataSnapshot dataSnapshot = task.getResult();
+//                        int CHECK_ADMIN = dataSnapshot.child("Admin").getValue(Integer.class);
+//                        if (CHECK_ADMIN == 1){
+//                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
+//                        } else {
+//                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
+//                        }
+//                    }
+//                }
+//            }
+//        });
     }
 
 }

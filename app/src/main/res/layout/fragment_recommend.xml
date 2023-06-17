@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/radial"
-    tools:context=".Fragment.RecommendFragment">
+    tools:context=".fragment.RecommendFragment">
     <GridLayout
         android:id="@+id/show_layout"
         android:layout_width="wrap_content"

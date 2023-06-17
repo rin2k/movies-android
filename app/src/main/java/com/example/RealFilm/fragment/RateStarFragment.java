@@ -1,10 +1,11 @@
-package com.example.RealFilm.Fragment;
+package com.example.RealFilm.fragment;
 
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,13 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.RealFilm.R;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.Movie;
+import com.example.RealFilm.model.Rate;
+import com.example.RealFilm.model.Status;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.MovieService;
+import com.example.RealFilm.service.RatingService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,6 +28,12 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RateStarFragment extends Fragment {
 
@@ -81,125 +95,91 @@ public class RateStarFragment extends Fragment {
         return view;
     }
 
-    private void sendRateOnclick(){
+    private void sendRateOnclick() {
         btn_send_rate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (STAR_COUNT == 0){
+                if (STAR_COUNT == 0) {
                     Toast.makeText(getActivity(), "Vui lòng đánh giá trước khi gửi!", Toast.LENGTH_SHORT).show();
                 } else {
                     send();
-                    showStars();
                 }
             }
         });
     }
 
-    private void showStars(){
-        mDatabase.child("Users").child(user.getUid()).child("stars").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+    private void showStars() {
+        setStar0();
+        RatingService ratingService = ApiService.createService(RatingService.class);
+        Call<ApiResponse<Rate>> call = ratingService.getMovieRate(Integer.valueOf(moviesID));
+
+        call.enqueue(new Callback<ApiResponse<Rate>>() {
             @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-                        DataSnapshot dataSnapshot = task.getResult();
-                        try {
-                            STAR_COUNT = ((Long) dataSnapshot.child(moviesID).getValue()).intValue();
-                            switch (STAR_COUNT){
-                                case 1:
-                                    setStar1();
-                                    break;
-                                case 2:
-                                    setStar2();
-                                    break;
-                                case 3:
-                                    setStar3();
-                                    break;
-                                case 4:
-                                    setStar4();
-                                    break;
-                                case 5:
-                                    setStar5();
-                                    break;
-                                default:
-                                    setStar0();
-                                    break;
-                            }
-                        } catch (NullPointerException e){
-                            setStar0();
-                        }
+            public void onResponse(Call<ApiResponse<Rate>> call, Response<ApiResponse<Rate>> response) {
+                if (response.body().getStatus() == Status.SUCCESS) {
+                    Rate rate = response.body().getData();
 
-                    }else {
-
-                    }
-                }
-            }
-        });
-    }
-
-    private void send(){
-
-        mDatabase.child("Movies").child(moviesID).child("stars").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-
-                        DataSnapshot dataSnapshot = task.getResult();
-                        STAR = ((Long) dataSnapshot.child("star").getValue()).intValue();
-                        TOTAL_RATING = ((Long) dataSnapshot.child("total_rating").getValue()).intValue();
-                        int _star = STAR + STAR_COUNT;
-                        int _total_rating = TOTAL_RATING + 1;
-                        stars stars = new stars(_star, _total_rating);
-                        mDatabase.child("Movies").child(moviesID).child("stars").setValue(stars).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    //Toast.makeText(getActivity(), "Đã gửi đánh giá!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                }
-                            }
-                        });
-
-                    }else {
-
-                    }
-                }
-            }
-        });
-
-        mDatabase.child("Users").child(user.getUid()).child("stars").child(moviesID).setValue(STAR_COUNT).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                   // Toast.makeText(getActivity(), "Đã gửi đánh giá!", Toast.LENGTH_SHORT).show();
-                } else {
-                }
-            }
-        });
-
-        mDatabase.child("Users").child(user.getUid()).child("stars").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-                        DataSnapshot dataSnapshot = task.getResult();
-                        String nameMovies = String.valueOf(dataSnapshot.child("nameMovies").getValue());
-                        if (nameMovies.toLowerCase().contains(moviesID.toLowerCase())){
-
-                        } else {
-                            if (nameMovies == "null"){
-                                mDatabase.child("Users").child(user.getUid()).child("stars").child("nameMovies").setValue(moviesID + ",");
-                            } else {
-                                mDatabase.child("Users").child(user.getUid()).child("stars").child("nameMovies").setValue(nameMovies + moviesID + ",");
-                            }
+                    if (rate != null) {
+                        STAR_COUNT = rate.getRating();
+                        switch (STAR_COUNT) {
+                            case 1:
+                                setStar1();
+                                break;
+                            case 2:
+                                setStar2();
+                                break;
+                            case 3:
+                                setStar3();
+                                break;
+                            case 4:
+                                setStar4();
+                                break;
+                            case 5:
+                                setStar5();
+                                break;
+                            default:
+                                setStar0();
+                                break;
                         }
                     }
+                    else {
+                        setStar0();
+                    }
                 }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Rate>> call, Throwable t) {
+                setStar0();
+
             }
         });
     }
 
-    private void rateStar(){
+    private void send() {
+        Log.d("COUNT", STAR_COUNT + "");
+
+        RatingService ratingService = ApiService.createService(RatingService.class);
+        Call<ApiResponse> call = ratingService.rateMovie(Integer.valueOf(moviesID), STAR_COUNT);
+
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.body().getStatus() == Status.SUCCESS) {
+                    Toast.makeText(getActivity(), "Đánh giá thành công!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+
+            }
+        });
+
+
+    }
+
+    private void rateStar() {
         star_1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -237,42 +217,47 @@ public class RateStarFragment extends Fragment {
         });
     }
 
-    private void setStar5(){
+    private void setStar5() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_24);
         star_4.setBackgroundResource(R.drawable.ic_round_star_24);
         star_5.setBackgroundResource(R.drawable.ic_round_star_24);
     }
-    private void setStar4(){
+
+    private void setStar4() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_24);
         star_4.setBackgroundResource(R.drawable.ic_round_star_24);
         star_5.setBackgroundResource(R.drawable.ic_round_star_border_24);
     }
-    private void setStar3(){
+
+    private void setStar3() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_24);
         star_4.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_5.setBackgroundResource(R.drawable.ic_round_star_border_24);
     }
-    private void setStar2(){
+
+    private void setStar2() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_4.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_5.setBackgroundResource(R.drawable.ic_round_star_border_24);
     }
-    private void setStar1(){
+
+    private void setStar1() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_4.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_5.setBackgroundResource(R.drawable.ic_round_star_border_24);
     }
-    private void setStar0(){
+
+    private void setStar0() {
         star_1.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_2.setBackgroundResource(R.drawable.ic_round_star_border_24);
         star_3.setBackgroundResource(R.drawable.ic_round_star_border_24);
@@ -284,7 +269,7 @@ public class RateStarFragment extends Fragment {
     public class stars {
         public int star, total_rating;
 
-        public stars(){
+        public stars() {
 
         }
 

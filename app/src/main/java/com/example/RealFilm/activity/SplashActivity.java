@@ -1,4 +1,4 @@
-package com.example.RealFilm;
+package com.example.RealFilm.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
+
+import com.example.RealFilm.R;
 
 public class SplashActivity extends AppCompatActivity {
     private CardView mImageView;
@@ -37,7 +39,7 @@ public class SplashActivity extends AppCompatActivity {
             public void run() {
                 super.run();
                 int waited = 0;
-                while (waited < 5000) {
+                while (waited < 100) {
                     try {
                         sleep(100);
                     } catch (InterruptedException e) {

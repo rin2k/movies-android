@@ -1,4 +1,4 @@
-package com.example.RealFilm;
+package com.example.RealFilm.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -8,10 +8,11 @@ import androidx.fragment.app.FragmentTransaction;
 import android.os.Bundle;
 
 //import com.example.doantotnghiep_xemphim.databinding.ActivityMainBinding;
-import com.example.RealFilm.Fragment.HomeFragment;
-import com.example.RealFilm.Fragment.UserProfileFragment;
-import com.example.RealFilm.Fragment.SearchFragment;
-import com.example.RealFilm.Fragment.SettingFragment;
+import com.example.RealFilm.R;
+import com.example.RealFilm.fragment.HomeFragment;
+import com.example.RealFilm.fragment.UserProfileFragment;
+import com.example.RealFilm.fragment.SearchFragment;
+import com.example.RealFilm.fragment.SettingFragment;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 

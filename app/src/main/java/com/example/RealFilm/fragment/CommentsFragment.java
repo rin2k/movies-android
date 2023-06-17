@@ -1,13 +1,8 @@
-package com.example.RealFilm.Fragment;
+package com.example.RealFilm.fragment;
 
 import android.content.res.Resources;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.fragment.app.Fragment;
-
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,23 +13,29 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.cardview.widget.CardView;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.example.RealFilm.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.example.RealFilm.model.ApiResponse;
+import com.example.RealFilm.model.Comment;
+import com.example.RealFilm.model.Status;
+import com.example.RealFilm.service.ApiService;
+import com.example.RealFilm.service.CommentService;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CommentsFragment extends Fragment {
 
@@ -46,7 +47,7 @@ public class CommentsFragment extends Fragment {
     private TextView textView_comments_count;
     private Button btn_send_comment;
     private String moviesID, userID;
-    private FirebaseUser user;
+
 
     private String mParam1;
     private String mParam2;
@@ -77,7 +78,7 @@ public class CommentsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_comments, container, false);
-
+        moviesID = getArguments().getString("id", "");
         initUi(view);
         showComments();
         btnSendCommentOnClick();
@@ -89,70 +90,48 @@ public class CommentsFragment extends Fragment {
         layout_set_comments = view.findViewById(R.id.layout_set_comments);
         btn_send_comment = view.findViewById(R.id.btn_send_comment);
         textView_comments_count = view.findViewById(R.id.textView_comments_count);
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        moviesID = getArguments().getString("id", "");
-        user = FirebaseAuth.getInstance().getCurrentUser();
+
     }
 
     private void showComments(){
 
-        mDatabase.child("Movies").child(moviesID).child("comments").addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.hasChildren()){
-                            collectComments((Map<String,Object>) dataSnapshot.getValue());
-                        } else {
-                            textView_comments_count.setText("0 bình luận");
-                        }
+        CommentService commentService = ApiService.createService(CommentService.class);
+        Call<ApiResponse<List<Comment>>> call = commentService.getCommentByMovie(Integer.valueOf(moviesID));
 
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
-    }
-
-    private void collectComments(Map<String,Object> comments) {
-
-        int COMMENT_COUNT = 0;
-        for (Map.Entry<String, Object> entry : comments.entrySet()){
-            Map singleUser = (Map) entry.getValue();
-            COMMENT_COUNT++;
-            textView_comments_count.setText(COMMENT_COUNT + " bình luận");
-            String comment_ = singleUser.get("comment").toString();
-            String userid_ = singleUser.get("userID").toString();
-            String time_ =  singleUser.get("time").toString();
-
-            mDatabase.child("Users").child(userid_).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                    if (task.isSuccessful()){
-                        if (task.getResult().exists()){
-                            DataSnapshot dataSnapshot = task.getResult();
-                            String name = String.valueOf(dataSnapshot.child("name").getValue());
-
-                            mDatabase.child("Users").child(userid_).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DataSnapshot> task) {
-                                    if (task.isSuccessful()){
-                                        DataSnapshot dataSnapshot = task.getResult();
-                                        String avatar = String.valueOf(dataSnapshot.child("avatar").getValue());
-                                        System.out.println("avatar link : " + avatar);
-                                        try {
-                                            setLayoutComment(name, time_, comment_, avatar);
-                                        } catch (NullPointerException e){
-                                        }
-                                    }
-                                }
-                            });
-
-                        }
+        call.enqueue(new Callback<ApiResponse<List<Comment>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Comment>>> call, Response<ApiResponse<List<Comment>>> response) {
+                if (response.isSuccessful()) {
+                    List<Comment> comments = response.body().getData();
+                    if (comments != null && !comments.isEmpty()) {
+                        collectComments(comments);
+                    } else {
+                        textView_comments_count.setText("0 bình luận");
                     }
                 }
-            });
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Comment>>> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+    private void collectComments(List<Comment> comments) {
+        int COMMENT_COUNT = 0;
+        for(Comment comment: comments){
+            COMMENT_COUNT++;
+            String name = comment.getUser().getName();
+            String time_= comment.getCreatedAt();
+            String comment_ = comment.getComment();
+            String avatar =comment.getUser().getPhotoURL();
+            setLayoutComment(name, time_, comment_, avatar);
+            textView_comments_count.setText(COMMENT_COUNT + " bình luận");
 
         }
+
     }
 
     private void setLayoutComment(String userid, String time, String comment, String avatar_link){
@@ -233,13 +212,13 @@ public class CommentsFragment extends Fragment {
         btn_send_comment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String COMMENT =  editText_comment.getText().toString().trim();
-                userID = user.getUid();
+                String comment = editText_comment.getText().toString().trim();
+                userID = "dm";
                 DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss\ndd/MM/yyyy");
                 Date date = new Date();
                 String time = dateFormat.format(date);
-                if (!COMMENT.matches("")){
-                    addComment(userID, COMMENT, time);
+                if (!comment.isEmpty()){
+                    addComment(comment);
                 };
                 reload();
             }
@@ -253,50 +232,26 @@ public class CommentsFragment extends Fragment {
         showComments();
     }
 
-    private void addComment(String userID, String comment, String time){
-        Comments comments = new Comments(userID, comment, time);
-        DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss_dd_MM_yyyy");
-        Date date = new Date();
-        String time_2 = dateFormat.format(date);
-        mDatabase.child("Movies").child(moviesID).child("comments").child(userID +"_"+ time_2).setValue(comments).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                } else {
-                }
-            }
-        });
-        mDatabase.child("Users").child(user.getUid()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (task.isSuccessful()){
-                    if (task.getResult().exists()){
-                        DataSnapshot dataSnapshot = task.getResult();
-                        String comments = String.valueOf(dataSnapshot.child("comments").getValue());
-                        if (comments == "null"){
-                            mDatabase.child("Users").child(user.getUid()).child("comments").setValue(moviesID + ",");
-                        } else {
-                            mDatabase.child("Users").child(user.getUid()).child("comments").setValue(comments + moviesID + ",");
-                        }
+    private void addComment(String comment){
 
+        CommentService commentService = ApiService.createService(CommentService.class);
+        Call<ApiResponse> call = commentService.createComment(Integer.valueOf(moviesID),comment);
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+
+                if(response.isSuccessful()){
+                    if(response.body().getStatus() == Status.SUCCESS){
+                        Toast.makeText(getActivity(), "Đã gửi", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+
+            }
         });
-    }
-
-    public class Comments {
-        public String userID, comment, time;
-
-        public Comments(){
-
-        }
-
-        public Comments(String userID, String comment, String time) {
-            this.userID = userID;
-            this.comment = comment;
-            this.time = time;
-        }
     }
     public static int dpToPx(int dp) {
         return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
