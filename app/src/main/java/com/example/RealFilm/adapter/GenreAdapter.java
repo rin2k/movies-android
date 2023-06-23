@@ -1,6 +1,7 @@
 package com.example.RealFilm.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,7 @@ public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.GenreViewHol
 
     @Override
     public void onBindViewHolder(@NonNull GenreViewHolder holder, int position) {
+
         Genre genre = genres.get(position);
         holder.checkBox.setText(genre.getName());
         holder.checkBox.setChecked(selectedGenres.contains(genre.getCode()));
@@ -45,6 +47,13 @@ public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.GenreViewHol
                 selectedGenres.remove(genre.getCode());
             }
         });
+    }
+
+
+    public void setSelectedGenres(List<String> selectedGenres) {
+        this.selectedGenres.clear();
+        this.selectedGenres.addAll(selectedGenres);
+        notifyDataSetChanged();
     }
 
     @Override

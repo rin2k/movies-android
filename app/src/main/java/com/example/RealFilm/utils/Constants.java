@@ -1,7 +1,6 @@
 package com.example.RealFilm.utils;
 
 public interface Constants {
-
     // Key movie
     String MOVIE_FAVORITE ="favorite";
     String MOVIE_COMMENT ="comment";
@@ -11,7 +10,6 @@ public interface Constants {
     String MOVIE_COUNTRY ="country";
 
     // Key authen
-
     String ACCESS_TOKEN ="access_token";
 
 }

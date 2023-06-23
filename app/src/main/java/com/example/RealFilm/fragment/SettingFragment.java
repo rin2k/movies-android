@@ -2,32 +2,22 @@ package com.example.RealFilm.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import com.bumptech.glide.Glide;
-import com.example.RealFilm.activity.AddMoviesActivity;
+import androidx.fragment.app.Fragment;
+
 import com.example.RealFilm.R;
+import com.example.RealFilm.activity.AddMoviesActivity;
+import com.example.RealFilm.activity.ManagerMovies;
 import com.example.RealFilm.model.ApiResponse;
 import com.example.RealFilm.model.Status;
 import com.example.RealFilm.model.User;
 import com.example.RealFilm.service.ApiService;
 import com.example.RealFilm.service.UserService;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,17 +25,12 @@ import retrofit2.Response;
 
 public class SettingFragment extends Fragment {
 
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private LinearLayout linearLayout_add_movies;
-    private Button btn_add_movies;
-    private DatabaseReference mDatabase;
-    private FirebaseUser user;
+    private LinearLayout linearLayout_add_movies, linearLayout_manager_movies;
+    private Button btn_add_movies, btn_manger_movies;
     private String mParam1;
     private String mParam2;
-
-    private Button Btn_setting_profile;
 
     public SettingFragment() {
         // Required empty public constructor
@@ -72,17 +57,20 @@ public class SettingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_setting, container, false);
-
-        mDatabase = FirebaseDatabase.getInstance().getReference("Users");
-        user = FirebaseAuth.getInstance().getCurrentUser();
         linearLayout_add_movies = view.findViewById(R.id.linearLayout_add_movies);
+        linearLayout_manager_movies = view.findViewById(R.id.linearLayout_manager_movies);
         btn_add_movies = view.findViewById(R.id.btn_add_movies);
+        btn_manger_movies = view.findViewById(R.id.btn_manager_movies);
+
+        // hide ui
         linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
+        linearLayout_manager_movies.findViewById(R.id.linearLayout_manager_movies).setVisibility(View.INVISIBLE);
 
-
-
-        checkAdmin();
+        // ...
+        checkRole();
         addMoviesOnClick();
+        btnMangerMoviesOnClick();
+
         return view;
     }
 
@@ -90,58 +78,52 @@ public class SettingFragment extends Fragment {
         btn_add_movies.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i1 = new Intent(getActivity(), AddMoviesActivity.class);
-                startActivity(i1);
+                Intent intent = new Intent(getActivity(), AddMoviesActivity.class);
+                startActivity(intent);
             }
         });
     }
 
+    public void btnMangerMoviesOnClick() {
+        btn_manger_movies.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), ManagerMovies.class);
+                startActivity(intent);
+            }
+        });
+    }
 
-    private void checkAdmin(){
+    private void checkRole() {
         UserService userService = ApiService.createService(UserService.class);
         Call<ApiResponse<User>> call = userService.getUser();
         call.enqueue(new Callback<ApiResponse<User>>() {
             @Override
             public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
-                if(response.isSuccessful()){
+                if (response.isSuccessful()) {
                     ApiResponse<User> res = response.body();
-                   if(res.getStatus() == Status.SUCCESS){
-                       User user = res.getData();
-                       if(user.getAdmin() == true){
-                           linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
-                       }
-                       else {
-                           linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
-                       }
-                   }
+                    if (res.getStatus() == Status.SUCCESS) {
+                        User user = res.getData();
+                        if (user.getAdmin() == true) {
+                            // show ui
+                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
+                            linearLayout_manager_movies.findViewById(R.id.linearLayout_manager_movies).setVisibility(View.VISIBLE);
+                        } else {
+                            // hide ui
+                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
+                            linearLayout_manager_movies.findViewById(R.id.linearLayout_manager_movies).setVisibility(View.INVISIBLE);
+                        }
+                    }
 
                 }
 
-
             }
+
             @Override
             public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
 
             }
         });
-
-//        String userId = "HVuDpDfG91e8K1ZU7psuyRj3JzY2";
-//        mDatabase.child(userId).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<DataSnapshot> task) {
-//                if (task.isSuccessful()){
-//                    if (task.getResult().exists()){
-//                        DataSnapshot dataSnapshot = task.getResult();
-//                        int CHECK_ADMIN = dataSnapshot.child("Admin").getValue(Integer.class);
-//                        if (CHECK_ADMIN == 1){
-//                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.VISIBLE);
-//                        } else {
-//                            linearLayout_add_movies.findViewById(R.id.linearLayout_add_movies).setVisibility(View.INVISIBLE);
-//                        }
-//                    }
-//                }
-//            }
-//        });
     }
 
 }

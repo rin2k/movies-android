@@ -13,14 +13,14 @@ import retrofit2.http.PUT;
 
 public interface UserService {
 
-    @Headers({"Authorization: "})
+
     @FormUrlEncoded
     @POST("login")
     Call<ApiResponse<User>>
     login(@Field("email") String email,
           @Field("password") String password);
 
-    @Headers({"Authorization: "})
+
     @FormUrlEncoded
     @POST("signup")
     Call<ApiResponse>

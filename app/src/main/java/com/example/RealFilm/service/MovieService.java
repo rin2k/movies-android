@@ -1,18 +1,18 @@
 package com.example.RealFilm.service;
 
 import com.example.RealFilm.model.ApiResponse;
-import com.example.RealFilm.model.Comment;
 import com.example.RealFilm.model.Movie;
+
 import java.util.List;
 
-import okhttp3.MultipartBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
-import retrofit2.http.Part;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 
@@ -30,12 +30,33 @@ public interface MovieService {
              @Field("actors") String actors,
              @Field("trailerURL") String trailerURL,
              @Field("genre") List<String> genre,
-             @Field ("videoURL") List<String> videoURL,
+             @Field("videoURL") List<String> videoURL,
              @Field("posterVertical") String posterVertical,
              @Field("posterHorizontal") String posterHorizontal
-//             @Part MultipartBody.Part posterVertical,
-//             @Part MultipartBody.Part posterHorizontal
     );
+
+    @FormUrlEncoded
+    @PUT("movies/{movieId}")
+    Call<ApiResponse>
+    updateMovie(@Path("movieId") Integer movieId ,
+                @Field("title") String title,
+                @Field("description") String description,
+                @Field("director") String director,
+                @Field("releaseYear") String releaseYear,
+                @Field("duration") Integer duration,
+                @Field("country") String country,
+                @Field("actors") String actors,
+                @Field("trailerURL") String trailerURL,
+                @Field("genre") List<String> genre,
+                @Field("videoURL") List<String> videoURL,
+                @Field("posterVertical") String posterVertical,
+                @Field("posterHorizontal") String posterHorizontal
+
+    );
+
+    @DELETE("movies/{movieId}")
+    Call<ApiResponse>
+    deleteMovie(@Path("movieId") Integer movieId);
 
     @GET("movies/search/{query}")
     Call<ApiResponse<List<Movie>>>

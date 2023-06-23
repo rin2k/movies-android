@@ -81,7 +81,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        //Khi nhấn vào button login
         btnLoginOnClick();
 
         CheckBox_rememberlogin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

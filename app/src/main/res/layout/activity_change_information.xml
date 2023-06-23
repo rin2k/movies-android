@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:layout_gravity="bottom"
-                android:src="@drawable/ic_baseline_edit_24"
+                android:src="@drawable/ic_edit"
                 android:background="#B2000000"/>
 
         </androidx.cardview.widget.CardView>
@@ -137,6 +137,7 @@
                         android:text="Email:"/>
                 </LinearLayout>
                 <EditText
+                    android:editable="false"
                     android:id="@+id/edittext_change_infor_email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,7 +27,6 @@ import com.example.RealFilm.databinding.ActivityAddMoviesBinding;
 import com.example.RealFilm.model.ApiResponse;
 import com.example.RealFilm.model.Country;
 import com.example.RealFilm.model.Genre;
-import com.example.RealFilm.model.Status;
 import com.example.RealFilm.service.ApiService;
 import com.example.RealFilm.service.CommonService;
 import com.example.RealFilm.service.MovieService;
@@ -35,27 +35,23 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AddMoviesActivity extends AppCompatActivity {
 
+    private static final int REQUEST_IMAGE_1 = 1;
+    private static final int REQUEST_IMAGE_2 = 2;
     private ActivityAddMoviesBinding binding;
     private GenreAdapter genreAdapter;
     private int LINK_NEXT = 2;
-
-    private static final int REQUEST_IMAGE_1 = 1;
-    private static final int REQUEST_IMAGE_2 = 2;
-
     private boolean validImage1Selected = false;
     private boolean validImage2Selected = false;
 
     private String selectedCountryId;
     private List<String> categoryIds = new ArrayList<>();
+    private Button btnBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +65,7 @@ public class AddMoviesActivity extends AppCompatActivity {
         btnAddMoreLinkOnClick();
         btnRemoveLinkOnClick();
         addPoster();
+        btnBackOnClick();
 
         // ...rest call api
         getCountries();
@@ -89,6 +86,14 @@ public class AddMoviesActivity extends AppCompatActivity {
         });
     }
 
+    private void btnBackOnClick() {
+        binding.btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+            }
+        });
+    }
 
     private void btnAddOnClick() {
         binding.btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -114,28 +119,10 @@ public class AddMoviesActivity extends AppCompatActivity {
         });
     }
 
-    private MultipartBody.Part prepareImagePart(String base64Image, String fileName) {
-        // Giải mã chuỗi base64 thành byte array
-        byte[] imageBytes = Base64.decode(base64Image, Base64.DEFAULT);
-
-        // Tạo RequestBody từ byte array
-        RequestBody requestBody = RequestBody.create(MediaType.parse("image/*"), imageBytes);
-
-        // Tạo MultipartBody.Part từ RequestBody
-        return MultipartBody.Part.createFormData("image", fileName, requestBody);
-    }
-
     private void handleAdd() {
 
         String base64Image1 = convertBitmapToBase64(((BitmapDrawable) binding.image1.getDrawable()).getBitmap());
         String base64Image2 = convertBitmapToBase64(((BitmapDrawable) binding.image2.getDrawable()).getBitmap());
-
-        int length1 = base64Image1.length();
-        int length2 = base64Image2.length();
-
-        System.out.println("Độ dài của base64Image1: " + length1);
-        System.out.println("Độ dài của base64Image2: " + length2);
-
 
         MovieService movieService = ApiService.createService(MovieService.class);
 
@@ -147,7 +134,7 @@ public class AddMoviesActivity extends AppCompatActivity {
         String country = selectedCountryId;
         String actors = binding.actors.getText().toString().trim();
         String trailerURL = binding.trailerLink.getText().toString().trim();
-        List<String> genres = genreAdapter.getSelectedGenres() ;
+        List<String> genres = genreAdapter.getSelectedGenres();
 
         List<String> movieLinks = new ArrayList<>();
         for (int i = 0; i < binding.movieLinks.getChildCount(); i++) {
@@ -162,38 +149,35 @@ public class AddMoviesActivity extends AppCompatActivity {
         }
 
 
-
         Call<ApiResponse> call = movieService.
-                addMovie(title, description, director, releaseYear, duration, country, actors, trailerURL, genres, movieLinks,base64Image1, base64Image1);
+                addMovie(title, description, director, releaseYear, duration, country, actors, trailerURL, genres, movieLinks, base64Image1, base64Image2);
 
         call.enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
-                if(response.isSuccessful()){
-                    ApiResponse<ApiResponse> res = response.body();
-                    if(res.getStatus() == Status.SUCCESS){
-                        AlertDialog.Builder builder = new AlertDialog.Builder(AddMoviesActivity.this);
-                        builder.setMessage(res.getMessage());
-                        builder.setCancelable(true);
-                        builder.setPositiveButton(
-                                "OK", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.cancel();
-                                    }
-                                });
-                        AlertDialog alertDelete = builder.create();
-                        alertDelete.show();
-                    }
-                    else{
-                        Toast.makeText(AddMoviesActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                ApiResponse<ApiResponse> res = response.body();
+                if (response.isSuccessful()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(AddMoviesActivity.this);
+                    builder.setMessage(res.getMessage());
+                    builder.setCancelable(true);
+                    builder.setPositiveButton(
+                            "OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                    onBackPressed();
+                                }
+                            });
+                    AlertDialog alertDelete = builder.create();
+                    alertDelete.show();
+                } else {
+
+                    Toast.makeText(AddMoviesActivity.this, "Trailer link không đúng định dạng", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse> call, Throwable t) {
-
             }
         });
 

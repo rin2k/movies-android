@@ -43,6 +43,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -71,6 +72,8 @@ public class HomeFragment extends Fragment {
     private List<Movie> moviesLatest;
 
     private LinearLayout movieContainer;
+
+    private String defaultGenre;
 
 
     public HomeFragment() {
@@ -161,9 +164,10 @@ public class HomeFragment extends Fragment {
 
                         Glide.with(getActivity()).load(posterUrl).into(imageView_poster_home_3x4);
                         textView_name_movies_home.setText(randomMovie.getTitle());
-                        textView_category_movies_home.setText(randomMovie.getGenre());
+                        defaultGenre = (randomMovie.getGenre());
                         btnTrailerOnClick(randomMovie.getTrailerURL());
                         btnPlayOnClick(randomMovie.getId());
+                        setDefaultGenreValue();
 
                     } else {
 
@@ -289,6 +293,40 @@ public class HomeFragment extends Fragment {
 
     }
 
+    private void setDefaultGenreValue () {
+        if(defaultGenre != null && genres !=null) {
+
+            List<String> selectedGenres = new ArrayList<>();
+            for (String genreCode : defaultGenre.split(",")) {
+                selectedGenres.add(genreCode.trim());
+            }
+            List<String> genreNames = new ArrayList<>();
+            for (String selected : selectedGenres) {
+                for (Genre genre : genres) {
+                    if (selected.equals(genre.getCode())) {
+                        genreNames.add(genre.getName());
+                        break;
+
+                    }
+                }
+
+            }
+
+            StringBuilder genresStringBuilder = new StringBuilder();
+            for (int i = 0; i < genreNames.size(); i++) {
+                genresStringBuilder.append(genreNames.get(i));
+                if (i < genreNames.size() - 1) {
+                    genresStringBuilder.append(", ");
+                }
+            }
+
+            String genresString = genresStringBuilder.toString();
+            textView_category_movies_home.setText(genresString);
+
+        }
+
+    }
+
     private void getGenres() {
         CommonService commonService = ApiService.createService(CommonService.class);
         Call<ApiResponse<List<Genre>>> call = commonService.getGenres();
@@ -304,6 +342,8 @@ public class HomeFragment extends Fragment {
                         addGenreView(genre.getName(), genre.getCode());
                         getMovieListBySelectedGenre(genre.getCode());
                     }
+                    setDefaultGenreValue();
+
                 }
             }
 

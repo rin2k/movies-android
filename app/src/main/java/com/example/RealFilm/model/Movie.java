@@ -180,4 +180,6 @@ public class Movie {
     public void setNumberOfReviews(Integer numberOfReviews) {
         this.numberOfReviews = numberOfReviews;
     }
+
+    public void Movie () {}
 }

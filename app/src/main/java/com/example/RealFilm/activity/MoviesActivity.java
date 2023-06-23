@@ -71,6 +71,7 @@ public class MoviesActivity extends AppCompatActivity {
     }
 
 
+
     private void getMovies(){
         Intent intent = getIntent();
         String str = intent.getStringExtra("key");
