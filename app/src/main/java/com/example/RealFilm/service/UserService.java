@@ -29,6 +29,7 @@ public interface UserService {
            @Field("email") String email,
            @Field("birthday") String birthday);
 
+
     @GET("profile")
     Call<ApiResponse<User>> getUser();
 
@@ -37,5 +38,6 @@ public interface UserService {
     Call<ApiResponse<User>>
     updateUser(@Field("name") String name,
                @Field("email") String email,
-               @Field("birthday") String birthday);
+               @Field("birthday") String birthday,
+               @Field("photoURL") String photoURL);
 }

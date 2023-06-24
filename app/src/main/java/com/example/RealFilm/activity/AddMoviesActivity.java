@@ -27,6 +27,7 @@ import com.example.RealFilm.databinding.ActivityAddMoviesBinding;
 import com.example.RealFilm.model.ApiResponse;
 import com.example.RealFilm.model.Country;
 import com.example.RealFilm.model.Genre;
+import com.example.RealFilm.model.Status;
 import com.example.RealFilm.service.ApiService;
 import com.example.RealFilm.service.CommonService;
 import com.example.RealFilm.service.MovieService;
@@ -156,7 +157,7 @@ public class AddMoviesActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
                 ApiResponse<ApiResponse> res = response.body();
-                if (response.isSuccessful()) {
+                if (res.getStatus() == Status.SUCCESS) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(AddMoviesActivity.this);
                     builder.setMessage(res.getMessage());
                     builder.setCancelable(true);
@@ -172,7 +173,7 @@ public class AddMoviesActivity extends AppCompatActivity {
                     alertDelete.show();
                 } else {
 
-                    Toast.makeText(AddMoviesActivity.this, "Trailer link không đúng định dạng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddMoviesActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
 

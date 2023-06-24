@@ -1,7 +1,5 @@
 package com.example.RealFilm.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -14,6 +12,8 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.RealFilm.R;
 import com.example.RealFilm.model.ApiResponse;
@@ -46,7 +46,7 @@ public class RegisterActivity extends AppCompatActivity {
     private String userId;
     private CheckBox Cb_register_confirm;
 
-    final Calendar myCalendar= Calendar.getInstance();
+    final Calendar myCalendar = Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +58,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
 
-    private void initUi(){
+    private void initUi() {
         Tv_login = findViewById(R.id.tv_login);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -94,42 +94,37 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegisterOnClick();
     }
 
-    public void btnRegisterOnClick(){
+    public void btnRegisterOnClick() {
         Btn_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 if (TextUtils.isEmpty(Edt_register_user_name.getText().toString())) {
                     tiplayout_register_user_name.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     tiplayout_register_user_name.setErrorEnabled(false);
                 }
                 if (TextUtils.isEmpty(Edt_register_user_birthday.getText().toString())) {
                     tiplayout_register_user_birthday.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     tiplayout_register_user_birthday.setErrorEnabled(false);
                 }
                 if (TextUtils.isEmpty(Edt_email.getText().toString())) {
                     tiplayout_email.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     tiplayout_email.setErrorEnabled(false);
                 }
                 if (TextUtils.isEmpty(Edt_password.getText().toString())) {
                     tiplayout_pass.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     tiplayout_pass.setErrorEnabled(false);
                 }
                 if (TextUtils.isEmpty(Edt_confirm_password.getText().toString())) {
                     tiplayout_confirm_pass.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     tiplayout_confirm_pass.setErrorEnabled(false);
                 }
-                if (!Cb_register_confirm.isChecked()){
+                if (!Cb_register_confirm.isChecked()) {
                     Toast.makeText(RegisterActivity.this, R.string.error_agree, Toast.LENGTH_LONG).show();
                 }
 
@@ -137,20 +132,19 @@ public class RegisterActivity extends AppCompatActivity {
 
                 String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
 
-                if (!email.matches(emailPattern))
-                {
+                if (!email.matches(emailPattern)) {
                     tiplayout_email.setError(getString(R.string.error_email_1));
                 }
 
-                if (Edt_password.getText().toString().trim().length() >= 6){
-                    if (Edt_email.getText().toString().trim().equalsIgnoreCase("") == false
-                            && Edt_password.getText().toString().trim().equalsIgnoreCase("")  == false
-                            && Edt_register_user_name.getText().toString().trim().equalsIgnoreCase("")  == false
-                            && Edt_register_user_birthday.getText().toString().trim().equalsIgnoreCase("")  == false
-                            && Edt_confirm_password.getText().toString().trim().equalsIgnoreCase("") == false
+                if (Edt_password.getText().toString().trim().length() >= 6) {
+                    if (!Edt_email.getText().toString().trim().equalsIgnoreCase("")
+                            && !Edt_password.getText().toString().trim().equalsIgnoreCase("")
+                            && !Edt_register_user_name.getText().toString().trim().equalsIgnoreCase("")
+                            && !Edt_register_user_birthday.getText().toString().trim().equalsIgnoreCase("")
+                            && !Edt_confirm_password.getText().toString().trim().equalsIgnoreCase("")
                             && email.matches(emailPattern)
-                            && Cb_register_confirm.isChecked()){
-                        if (Edt_password.getText().toString().trim().equals(Edt_confirm_password.getText().toString().trim())){
+                            && Cb_register_confirm.isChecked()) {
+                        if (Edt_password.getText().toString().trim().equals(Edt_confirm_password.getText().toString().trim())) {
                             createAccount();
                         } else {
                             tiplayout_confirm_pass.setError(getString(R.string.error_password_1));
@@ -182,20 +176,16 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
                 progressDialog.dismiss();
-                if(response.isSuccessful()){
+                if (response.isSuccessful()) {
                     ApiResponse<User> res = response.body();
-                    if(res.getStatus() == Status.SUCCESS){
+                    if (res.getStatus() == Status.SUCCESS) {
                         Toast.makeText(getApplication(), res.getMessage(), Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(RegisterActivity.this,LoginActivity.class);
+                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                         startActivity(intent);
                         finishAffinity();
-                    }
-                    else{
+                    } else {
                         Toast.makeText(getApplication(), res.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                }
-                else  {
-                    Toast.makeText(getApplication(), "Đã xảy ra lỗi", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -204,48 +194,30 @@ public class RegisterActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-//        mAuth.createUserWithEmailAndPassword(strEmail, strPass)
-//                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<AuthResult> task) {
-//                        if (task.isSuccessful()) {
-//                            userId = mAuth.getCurrentUser().getUid();
-//                            writeNewUser(strName, strEmail, strBirthday);
-//
-//                        } else {
-//                            progressDialog.dismiss();
-//                            Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_LONG).show();
-//                        }
-//                    }
-//                });
     }
 
 
-
-    public void pickDate(){
+    public void pickDate() {
         DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int day) {
                 myCalendar.set(Calendar.YEAR, year);
-                myCalendar.set(Calendar.MONTH,month);
-                myCalendar.set(Calendar.DAY_OF_MONTH,day);
+                myCalendar.set(Calendar.MONTH, month);
+                myCalendar.set(Calendar.DAY_OF_MONTH, day);
                 updateLabel();
             }
         };
         Edt_register_user_birthday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new DatePickerDialog(RegisterActivity.this,date,myCalendar.get(Calendar.YEAR),myCalendar.get(Calendar.MONTH),myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+                new DatePickerDialog(RegisterActivity.this, date, myCalendar.get(Calendar.YEAR), myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
             }
         });
     }
 
-    private void updateLabel(){
-        String myFormat="dd/MM/yyyy";
-        SimpleDateFormat dateFormat=new SimpleDateFormat(myFormat, Locale.US);
+    private void updateLabel() {
+        String myFormat = "dd/MM/yyyy";
+        SimpleDateFormat dateFormat = new SimpleDateFormat(myFormat, Locale.US);
         Edt_register_user_birthday.setText(dateFormat.format(myCalendar.getTime()));
     }
 

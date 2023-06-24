@@ -1,13 +1,10 @@
 package com.example.RealFilm.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -15,6 +12,8 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.RealFilm.MyApplication;
 import com.example.RealFilm.R;
@@ -39,7 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog progressDialog;
     private SharedPreferences sharedPreferences;
 
-    private SharedPreferences.Editor editor ;
+    private SharedPreferences.Editor editor;
 
 
     private CheckBox CheckBox_rememberlogin;
@@ -53,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
         rememberLogin();
     }
 
-    private void initUi(){
+    private void initUi() {
         Tv_register = findViewById(R.id.tv_register);
 
         Edittext_email = findViewById(R.id.edittext_login_email);
@@ -86,11 +85,10 @@ public class LoginActivity extends AppCompatActivity {
         CheckBox_rememberlogin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
+                if (b) {
                     editor.putBoolean("checked", true);
                     editor.commit();
-                }
-                else {
+                } else {
                     editor.putBoolean("checked", false);
                     editor.commit();
                 }
@@ -99,20 +97,19 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    private void rememberLogin(){
+    private void rememberLogin() {
         String shared_email = sharedPreferences.getString("email", "");
         String shared_password = sharedPreferences.getString("password", "");
         boolean checked = sharedPreferences.getBoolean("checked", false);
 
-        if(checked){
-            if (shared_email != "" && shared_password != ""){
+        if (checked) {
+            if (shared_email != "" && shared_password != "") {
                 Edittext_email.setText(shared_email);
                 Edittext_password.setText(shared_password);
                 CheckBox_rememberlogin.setChecked(true);
             }
-        }
-        else {
-            if (shared_email != "" && shared_password != ""){
+        } else {
+            if (shared_email != "" && shared_password != "") {
                 Edittext_email.setText(shared_email);
                 CheckBox_rememberlogin.setChecked(false);
             }
@@ -120,26 +117,24 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    public void btnLoginOnClick(){
+    public void btnLoginOnClick() {
         Btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (Edittext_email.getText().toString().trim().equalsIgnoreCase("")) {
                     Tiplayout_login_email.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     Tiplayout_login_email.setErrorEnabled(false);
                 }
                 if (Edittext_password.getText().toString().trim().equalsIgnoreCase("")) {
                     Tiplayout_login_password.setError(getString(R.string.error_not_be_empty));
-                }
-                else {
+                } else {
                     Tiplayout_login_password.setErrorEnabled(false);
                 }
 
-                if (Edittext_password.getText().toString().trim().length() >= 6){
-                    if (Edittext_email.getText().toString().trim().equalsIgnoreCase("") == false
-                            && Edittext_password.getText().toString().trim().equalsIgnoreCase("")  == false){
+                if (Edittext_password.getText().toString().trim().length() >= 6) {
+                    if (!Edittext_email.getText().toString().trim().equalsIgnoreCase("")
+                            && !Edittext_password.getText().toString().trim().equalsIgnoreCase("")) {
                         login();
                     }
                 } else {
@@ -156,48 +151,37 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.show();
 
         UserService userService = ApiService.createService(UserService.class);
-        Call<ApiResponse<User>> call = userService.login(strEmail,strPass);
+        Call<ApiResponse<User>> call = userService.login(strEmail, strPass);
         call.enqueue(new Callback<ApiResponse<User>>() {
-           @Override
-           public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
-               progressDialog.dismiss();
-               if(response.isSuccessful()){
-                   ApiResponse<User> res = response.body();
-                    if(res.getStatus() == Status.SUCCESS){
-                        Toast.makeText(LoginActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        saveDataLogin(strEmail,strPass, res.getAccessToken());
+            @Override
+            public void onResponse(Call<ApiResponse<User>> call, Response<ApiResponse<User>> response) {
+                progressDialog.dismiss();
+                ApiResponse<User> res = response.body();
+                if (res.getStatus() == Status.SUCCESS) {
+                    Toast.makeText(LoginActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    saveDataLogin(strEmail, strPass, res.getAccessToken());
+                } else {
+                    Toast.makeText(LoginActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
 
-                    }
-                    else{
-                        Toast.makeText(LoginActivity.this, res.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-               }
-               else  {
-                   Toast.makeText(LoginActivity.this, "Đã xảy ra lỗi", Toast.LENGTH_SHORT).show();
-               }
-           }
+            @Override
+            public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
 
-           @Override
-           public void onFailure(Call<ApiResponse<User>> call, Throwable t) {
-
-           }
-       });
-
-
-
+            }
+        });
     }
 
-    public void saveDataLogin(String strEmail, String strPass, String token){
-        if (CheckBox_rememberlogin.isChecked()){
+    public void saveDataLogin(String strEmail, String strPass, String token) {
+        if (CheckBox_rememberlogin.isChecked()) {
             editor.putString("email", strEmail);
             editor.putString("password", strPass);
             editor.putString(Constants.ACCESS_TOKEN, token);
             MyApplication.saveToken(token);
             editor.commit();
-        }
-        else {
+        } else {
             editor.putString("email", strEmail);
             editor.commit();
         }

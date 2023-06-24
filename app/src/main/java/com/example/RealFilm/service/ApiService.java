@@ -1,17 +1,11 @@
 package com.example.RealFilm.service;
 
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.util.Log;
-
 import com.example.RealFilm.BuildConfig;
 import com.example.RealFilm.MyApplication;
-import com.example.RealFilm.utils.Constants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.util.concurrent.TimeUnit;
 
@@ -25,7 +19,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ApiService {
 
 
-
     public static final String BASE_URL = "http://127.0.0.1:3000/api/v1/";
 
     public static <S> S createService(Class<S> serviceClass) {
@@ -35,7 +28,7 @@ public class ApiService {
         Interceptor interceptor = chain -> {
             Request originalRequest = chain.request();
             Request.Builder modifiedRequest = originalRequest.newBuilder();
-            modifiedRequest.addHeader("Authorization","Bearer " + token);
+            modifiedRequest.addHeader("Authorization", "Bearer " + token);
             return chain.proceed(modifiedRequest.build());
         };
 
@@ -47,13 +40,9 @@ public class ApiService {
                 .setVersion(1.0)
                 .create();
 
-
-
         Retrofit.Builder builder = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .baseUrl(BASE_URL);
-
-
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
@@ -69,12 +58,8 @@ public class ApiService {
 
         }
 
-
         builder.client(httpClient.build());
         Retrofit retrofit = builder.build();
-        return  retrofit.create(serviceClass);
+        return retrofit.create(serviceClass);
     }
-
-
-
 }

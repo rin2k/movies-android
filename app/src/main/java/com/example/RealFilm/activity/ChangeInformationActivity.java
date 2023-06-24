@@ -3,8 +3,11 @@ package com.example.RealFilm.activity;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -27,6 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -127,14 +131,22 @@ public class ChangeInformationActivity extends AppCompatActivity {
             }
         });
     }
-
+    private String convertBitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        String base64Image = Base64.encodeToString(byteArray, Base64.DEFAULT);
+        return "data:image/png;base64," + base64Image;
+    }
     private void updateUserProfile() {
+
+        String photoURL = convertBitmapToBase64(((BitmapDrawable) imageView_avatar.getDrawable()).getBitmap());
         String emailUpdate = Edittext_change_infor_email.getText().toString().trim();
         String nameUpdate = Edittext_change_infor_name.getText().toString().trim();
         String birthdaylUpdate = Edittext_change_infor_birthday.getText().toString().trim();
 
         UserService userService = ApiService.createService(UserService.class);
-        Call<ApiResponse<User>> call = userService.updateUser(nameUpdate, emailUpdate, birthdaylUpdate);
+        Call<ApiResponse<User>> call = userService.updateUser(nameUpdate, emailUpdate, birthdaylUpdate, photoURL);
 
         call.enqueue(new Callback<ApiResponse<User>>() {
             @Override
