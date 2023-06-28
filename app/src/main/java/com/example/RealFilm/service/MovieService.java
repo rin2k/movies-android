@@ -103,4 +103,9 @@ public interface MovieService {
     getRatedMovies();
 
 
+    @POST("movies/{movieId}/view-count")
+    Call<ApiResponse>
+    addViewCount(@Path("movieId") Integer movieId);
+
+
 }

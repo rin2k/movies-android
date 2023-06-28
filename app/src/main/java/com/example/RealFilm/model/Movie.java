@@ -53,6 +53,9 @@ public class Movie {
     @SerializedName("videoURL")
     private List<String> videoURL;
 
+    @SerializedName("viewCounts")
+    private Integer viewCounts;
+
     public List<String> getVideoURL() {
         return videoURL;
     }
@@ -179,6 +182,14 @@ public class Movie {
 
     public void setNumberOfReviews(Integer numberOfReviews) {
         this.numberOfReviews = numberOfReviews;
+    }
+
+    public Integer getViewCounts() {
+        return viewCounts;
+    }
+
+    public void setViewCounts(Integer viewCounts) {
+        this.viewCounts = viewCounts;
     }
 
     public void Movie () {}

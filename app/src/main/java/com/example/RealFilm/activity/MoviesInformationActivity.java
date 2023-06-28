@@ -232,6 +232,7 @@ public class MoviesInformationActivity extends AppCompatActivity {
                     textView_review.setText(movie.getDescription());
                     textView_category_movies.setText(movie.getGenre());
                     textView_nation_movies.setText(movie.getCountry());
+                    textView_view_count_movies.setText(movie.getViewCounts() + "");
 
                     textView_count_rates.setText(movie.getNumberOfReviews() + " đánh giá");
                     hasLiked = movie.getHasFavorite();
@@ -305,6 +306,24 @@ public class MoviesInformationActivity extends AppCompatActivity {
         btn_play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                MovieService movieService = ApiService.createService(MovieService.class);
+                Call<ApiResponse> call = movieService.addViewCount(movieId);
+
+                call.enqueue(new Callback<ApiResponse>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                        
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse> call, Throwable t) {
+
+                    }
+                });
+
+
+
                 Intent i1 = new Intent(MoviesInformationActivity.this, WatchMoviesActivity.class);
                 i1.putExtra("link", value);
                 i1.putExtra("name", name);
