@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -45,6 +46,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import wseemann.media.FFmpegMediaMetadataRetriever;
@@ -57,12 +59,11 @@ public class WatchMoviesActivity extends AppCompatActivity {
     private ImageView btn_play_pause, btn_replay, btn_forward, btn_back, imageView_volume;
     private LinearLayout linearLayoutController;
     private FrameLayout frameLayout;
-    private Uri video;
+    private Uri videoUri;
     private SimpleExoPlayer exoPlayer;
     private AudioManager audioManager;
     private boolean checkSH = true, checkPlayPause = true;
     private Handler mHandler;
-    private DatabaseReference mDatabase;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,7 +71,7 @@ public class WatchMoviesActivity extends AppCompatActivity {
 
         initUi();
         showhideControl();
-        play();
+        initializePlayer();
         startPlayer();
         btn_play_pause_OnClick();
         btnForwardOnClick();
@@ -101,7 +102,7 @@ public class WatchMoviesActivity extends AppCompatActivity {
                 if (playbackState == ExoPlayer.STATE_READY) {
                     long realDurationMillis = exoPlayer.getDuration();
                     seekBar_video.setMax((int)realDurationMillis);
-                    textView_duration.setText(getDuration());
+                    textView_duration.setText(convertMillisToTime(realDurationMillis));
                 }
             }
 
@@ -127,6 +128,13 @@ public class WatchMoviesActivity extends AppCompatActivity {
         });
     }
 
+    public String convertMillisToTime(long milliseconds) {
+        long seconds = (milliseconds / 1000) % 60;
+        long minutes = (milliseconds / (1000 * 60)) % 60;
+        long hours = (milliseconds / (1000 * 60 * 60)) % 24;
+
+        return String.format(Locale.getDefault().getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
+    }
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -164,8 +172,6 @@ public class WatchMoviesActivity extends AppCompatActivity {
         text_show_volume = findViewById(R.id.text_show_volume);
         movies_name = findViewById(R.id.movies_name);
         mHandler = new Handler();
-        mDatabase = FirebaseDatabase.getInstance().getReference("Movies");
-
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -175,30 +181,9 @@ public class WatchMoviesActivity extends AppCompatActivity {
         String str_name = intent.getStringExtra("name");
         String str_year = intent.getStringExtra("year");
         movies_name.setText(str_name + " (" +str_year + ")");
-
-        getData(str_name);
-        video = Uri.parse(str);
+        videoUri = Uri.parse(str);
 
     }
-
-    private void getData(String str){
-
-//        mDatabase.child(str).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<DataSnapshot> task) {
-//                if (task.isSuccessful()){
-//                    if (task.getResult().exists()){
-//                        DataSnapshot dataSnapshot = task.getResult();
-//                        int viewcount = Integer.parseInt(dataSnapshot.child("viewcount").getValue().toString());
-//                        mDatabase.child(str).child("viewcount").setValue(viewcount + 1);
-//                    }
-//                }
-//
-//            }
-//        });
-
-    }
-
     private void seekBarVolume(){
         seek_volume.setProgress(audioManager.getStreamVolume(exoPlayer.getAudioStreamType()));
         seek_volume.setMax(audioManager.getStreamMaxVolume(exoPlayer.getAudioStreamType()));
@@ -299,7 +284,7 @@ public class WatchMoviesActivity extends AppCompatActivity {
         seekBar_video.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                textView_current_duration.setText(formatTime((long) seekBar.getProgress()));
+                textView_current_duration.setText(convertMillisToTime((long) seekBar.getProgress()));
             }
 
             @Override
@@ -315,43 +300,50 @@ public class WatchMoviesActivity extends AppCompatActivity {
         });
     }
 
-    private void play(){
+    private void  initializePlayer(){
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelector trackSelector = new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(bandwidthMeter));
         exoPlayer = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
         DefaultHttpDataSourceFactory dataSourceFactory = new DefaultHttpDataSourceFactory("exoplayer_video");
         ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
-        MediaSource mediaSource = new ExtractorMediaSource(video, dataSourceFactory, extractorsFactory, null, null);
+        MediaSource mediaSource = new ExtractorMediaSource(
+                videoUri, dataSourceFactory, extractorsFactory, null, null);
         videoView.setPlayer(exoPlayer);
         exoPlayer.prepare(mediaSource);
     }
+
+
 
 
     private void btn_play_pause_OnClick(){
         btn_play_pause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (checkPlayPause){
+                    checkPlayPause = false;
                     btn_play_pause.setBackground(getDrawable(R.drawable.ic_round_play_arrow_24));
                     pausePlayer();
-                    checkPlayPause = false;
+
                 }
                 else {
+                    checkPlayPause = true;
                     linearLayoutController.setVisibility(View.VISIBLE);
                     btn_play_pause.setBackground(getDrawable(R.drawable.ic_round_pause_24));
                     startPlayer();
-                    checkPlayPause = true;
                 }
             }
         });
     }
 
-    private void pausePlayer(){
+    protected void pausePlayer(){
         exoPlayer.setPlayWhenReady(false);
+        exoPlayer.getPlaybackState();
     }
 
-    private void startPlayer(){
+    protected void startPlayer(){
         exoPlayer.setPlayWhenReady(true);
+        exoPlayer.getPlaybackState();
     }
 
     public void showhideControl(){
@@ -369,33 +361,4 @@ public class WatchMoviesActivity extends AppCompatActivity {
             }
         });
     }
-
-    public String getDuration(){
-        FFmpegMediaMetadataRetriever mFFmpegMediaMetadataRetriever = new FFmpegMediaMetadataRetriever();
-        mFFmpegMediaMetadataRetriever.setDataSource(video.toString());
-        String mVideoDuration =  mFFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION);
-        long mTimeInMilliseconds= Long.parseLong(mVideoDuration);
-        return formatTime(mTimeInMilliseconds);
-    }
-
-    public String formatTime(Long mTimeInMilliseconds){
-        String duration = String.format("%d:%d:%d",
-                TimeUnit.MILLISECONDS.toHours(mTimeInMilliseconds),
-                TimeUnit.MILLISECONDS.toMinutes(mTimeInMilliseconds) -
-                        TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(mTimeInMilliseconds)),
-                TimeUnit.MILLISECONDS.toSeconds(mTimeInMilliseconds) -
-                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mTimeInMilliseconds)));
-
-        return duration;
-    }
-
-//    public long getTime(){
-//        FFmpegMediaMetadataRetriever mFFmpegMediaMetadataRetriever = new FFmpegMediaMetadataRetriever();
-//        mFFmpegMediaMetadataRetriever.setDataSource(video.toString());
-//        String mVideoDuration =  mFFmpegMediaMetadataRetriever.extractMetadata(FFmpegMediaMetadataRetriever.METADATA_KEY_DURATION);
-//        long mTimeInMilliseconds= Long.parseLong(mVideoDuration);
-//
-//        return mTimeInMilliseconds;
-//    }
-
 }
